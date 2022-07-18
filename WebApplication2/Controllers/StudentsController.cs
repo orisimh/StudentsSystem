@@ -84,7 +84,7 @@ namespace WebApplication2.Controllers
         [EnableCors("ApiCorsPolicy")]
         public async Task<IActionResult> GetidAsync([FromQuery(Name = "key")] string key)//, string key)
         {
-            //string key = "089";
+            //string key = "089"; remove 
             var num = await _db.Students.ToListAsync();
             if (num.Count == 0)
             {
