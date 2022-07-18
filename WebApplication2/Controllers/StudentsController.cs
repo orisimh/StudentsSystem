@@ -30,7 +30,7 @@ namespace WebApplication2.Controllers
         IDistributedCache _dch;
         public StudentsController(DemoDB db, IDistributedCache  distributedCache) //IDistributedCache DistributedCacheExtensions cacheservice ,
         {
-            _db = db;
+            _db = db;   
             _dch = distributedCache;
         }
 
