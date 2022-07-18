@@ -72,7 +72,7 @@ namespace WebApplication2.Controllers
            var res =_dch.Get(id);
             if (res != null)
             {
-                return Ok(res);
+                return Ok(res);      
             }
             return Ok(_db.Students.FirstOrDefaultAsync(x=> x.Id==id));
             // return Ok(default);
