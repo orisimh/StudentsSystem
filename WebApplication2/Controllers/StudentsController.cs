@@ -74,23 +74,23 @@ namespace WebApplication2.Controllers
             {
                 return Ok(res);      
             }
-            return Ok(_db.Students.FirstOrDefaultAsync(x=> x.Id==id));
+            return Ok(_db.Students.FirstOrDefaultAsync(x=> x.Id.ToString() == id));
             // return Ok(default);
 
 
         }
         //[Route("id")]
-        [HttpGet("")]
+        [HttpGet]// "{key}"
         [EnableCors("ApiCorsPolicy")]
-        public async Task<IActionResult> GetidAsync([FromQuery(Name = "key")] string key)//, string key)
+        public async Task<IActionResult> GetidAsync([FromQuery(Name = "key")] string key , string age)//, string key)
         {
-            //string key = "089"; remove 
             var num = await _db.Students.ToListAsync();
             if (num.Count == 0)
             {
 
                 return StatusCode(404, "No Students Found");
             }
+
             if(key == null)
             {
 
@@ -104,15 +104,106 @@ namespace WebApplication2.Controllers
             {
                 return Ok(res);
             }
-            tblStudent row =  await _db.Students.FirstOrDefaultAsync(x => x.Id == key);
-            await _dch.SetRecordAsync<tblStudent>(key, row);
+
+            Students row =  await _db.Students.FirstOrDefaultAsync(x => x.Id.ToString() == key);
+            await _dch.SetRecordAsync<Students>(key, row, TimeSpan.FromSeconds(10));
 
 
             return Ok(row);
             // return Ok(default);
-
-
         }
+
+        [HttpGet("age")]
+        [EnableCors("ApiCorsPolicy")]
+        public async Task<IActionResult> GetAgeAsync(int age)// [FromQuery] Student st , string key) (Name = "age")
+        {
+            //var num = await _db.Students.ToListAsync();
+            //if (num.Count == 0)
+            //{
+
+            //    return StatusCode(404, "No Students Found");
+            //}
+
+            //if (age == null)
+            //{
+
+            //    return Ok(_db.Students.ToList());
+            //}
+
+
+            ////_dch.SetString("key02", "hello");
+            //var res = await _dch.GetRecordAsync<JObject>(age);
+            //if (res != null)
+            //{
+            //    return Ok(res);
+            //}
+
+            //tblStudent row = await _db.Students.FirstOrDefaultAsync(x => x.Id == age);
+            //await _dch.SetRecordAsync<tblStudent>(age, row, TimeSpan.FromSeconds(10));
+
+
+            return Ok(default(string));
+        }
+
+        [HttpGet("GradesAvg")]
+        [EnableCors("ApiCorsPolicy")]
+        public async Task<IActionResult> GetGradesAsync(int age)// [FromQuery] Student st , string key) (Name = "age")
+        {
+            //var num = await _db.Students.ToListAsync();
+            //if (num.Count == 0)
+            //{
+
+            //    return StatusCode(404, "No Students Found");
+            //}
+
+            //if (age == null)
+            //{
+
+            //    return Ok(_db.Students.ToList());
+            //}
+
+
+            ////_dch.SetString("key02", "hello");
+            //var res = await _dch.GetRecordAsync<JObject>(age);
+            //if (res != null)
+            //{
+            //    return Ok(res);
+            //}
+
+            //tblStudent row = await _db.Students.FirstOrDefaultAsync(x => x.Id == age);
+            //await _dch.SetRecordAsync<tblStudent>(age, row, TimeSpan.FromSeconds(10));
+
+
+            return Ok(default(string));
+        }
+
+        [HttpGet("FirstName")]
+        [EnableCors("ApiCorsPolicy")]
+        public async Task<IActionResult> GetFSAsync(string fs)// [FromQuery] Student st , string key) (Name = "age")
+        {
+            
+            var res = await _dch.GetRecordAsync<JObject>(fs);
+            if (res != null)
+            {
+                return Ok(res);
+            }
+
+            var results = await _db.Students.Where(x => x.FirstName == fs).ToListAsync();
+            if (results.Count == 0)
+            {
+
+                return StatusCode(404, "No Students Found");
+            }
+
+            //tblStudent row = await _db.Students.FirstOrDefaultAsync(x => x.FirstName == fs);
+            await _dch.SetRecordAsync<List<Students>>(fs, results, TimeSpan.FromSeconds(10));
+
+
+            return Ok(results);
+        }
+
+
+
         [HttpPost("Add")]  //  "Add/{id}"
         [EnableCors("ApiCorsPolicy")]
         public IActionResult Post(Student student) // JObject student [FromBody]
@@ -126,11 +217,14 @@ namespace WebApplication2.Controllers
                     return StatusCode(404, "Object is NULL");
                 }
 
-                tblStudent studentnew = new tblStudent();
-                studentnew.Id = student.Id;
+                Students studentnew = new Students();
+
+                //studentnew.Id = 0;// student.Id;
                 studentnew.FirstName = student.FirstName;
                 studentnew.LastName = student.LastName;
                 studentnew.Gender = student.Gender;
+                studentnew.Age = student.Age;
+                studentnew.GradesAvg = student.GradesAvg;
                 studentnew.Nation = student.Nation;
                 studentnew.Phone = student.Phone;
                 studentnew.Tel = student.Tel;
@@ -139,24 +233,30 @@ namespace WebApplication2.Controllers
                 studentnew.Country = student.Country;
                 studentnew.email = student.email;
 
+                // _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Tirgul].[dbo].[Students] ON");
+
                 _db.Students.Add(studentnew);
 
 
-                tblDeltaStudent StudentDnew = new tblDeltaStudent();
-                StudentDnew.Id = student.Id;
-                StudentDnew.FirstName = student.FirstName;
-                StudentDnew.LastName = student.LastName;
-                StudentDnew.Gender = student.Gender;
-                StudentDnew.Nation = student.Nation;
-                StudentDnew.Phone = student.Phone;
-                StudentDnew.Tel = student.Tel;
-                StudentDnew.Brithday = student.Brithday;
-                StudentDnew.DateIncrease = student.DateIncrease;
-                StudentDnew.Country = student.Country;
-                StudentDnew.email = student.email;
 
-                _db.DeltaStudents.Add(StudentDnew);
+                //tblDeltaStudent StudentDnew = new tblDeltaStudent();
+                //StudentDnew.Id = student.Id;
+                //StudentDnew.FirstName = student.FirstName;
+                //StudentDnew.LastName = student.LastName;
+                //StudentDnew.Gender = student.Gender;
+                //StudentDnew.Age = student.Age;
+                //StudentDnew.GradesAvg = student.GradesAvg;
+                //StudentDnew.Nation = student.Nation;
+                //StudentDnew.Phone = student.Phone;
+                //StudentDnew.Tel = student.Tel;
+                //StudentDnew.Brithday = student.Brithday;
+                //StudentDnew.DateIncrease = student.DateIncrease;
+                //StudentDnew.Country = student.Country;
+                //StudentDnew.email = student.email;
 
+                //_db.DeltaStudents.Add(StudentDnew);
+
+             // _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Students ON");
 
                 _db.SaveChanges();
             }
