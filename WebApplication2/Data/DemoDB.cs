@@ -16,11 +16,11 @@ namespace WebApplication2.Data
         }
 
         public DbSet<Students> Students { get;  set; }
-        public DbSet<tblDeltaStudent> DeltaStudents { get; set; }
+        // public DbSet<tblDeltaStudent> DeltaStudents { get; set; }
         public DbSet<UserCred> UserCred { get; set; }
 
-        public DbSet<Question> Question { get; set; }
-        public DbSet<Answer> Answer { get; set; }
+       public DbSet<Question> Question { get; set; }
+       public DbSet<Answer> Answer { get; set; }
 
 
         // public DbSet<RolesByUsers> Roles { get; set; }
