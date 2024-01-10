@@ -123,10 +123,10 @@ namespace WebApplication2.Controllers
                     return StatusCode(404, "Object is NULL");
                 }
 
-                if (qs.QST_Type <= 0 )
+                if (qs.QST_Type <= 0 || qs.QST_Text == null || qs.QST_Text == "")
                 {
 
-                    return BadRequest("please provide valid Question Type");
+                    return BadRequest("please provide valid data");
                 }
 
                 _db.Database.BeginTransaction();
@@ -144,7 +144,12 @@ namespace WebApplication2.Controllers
 
                 foreach ( Answer ans in qs.Answers)
                 {
-                   // ans.ANS_QST_ID = questionId;
+                    // ans.ANS_QST_ID = questionId;
+                    if (ans.ANS_Text == null || ans.ANS_Text == "")
+                    {
+
+                        return BadRequest("please provide valid data");
+                    }
 
                     _db.Answer.Add(ans);
 
