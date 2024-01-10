@@ -15,9 +15,14 @@ using Newtonsoft.Json.Linq;
 using WebApplication2.Data;
 //using WebApplication2.Services;
 using WebApplication2.Services;
+using MongoDB.Driver;
+using WebApplication2.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Data.SqlClient;
 
 namespace WebApplication2.Controllers
 {
+    // [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StudentsController : ControllerBase
@@ -25,35 +30,56 @@ namespace WebApplication2.Controllers
     {
 
         private DemoDB _db;
+        //private IMongoClient _mngclnt=null;
+        private  IMongoCollection<Student> _clts = null;
 
-        //DistributedCacheExtensions _dch = null;
-        IDistributedCache _dch;
-        public StudentsController(DemoDB db, IDistributedCache  distributedCache) //IDistributedCache DistributedCacheExtensions cacheservice ,
-        {
-            _db = db;   
+       //DistributedCacheExtensions _dch = null;
+       IDistributedCache _dch;
+       IJWTAuthenticationManager _jwt ;
+        //public StudentsController(DemoDB db, IDistributedCache  distributedCache , IMongoClient mngclnt , MongoDBConnectionString mndbconn , IJWTAuthenticationManager jwt) //IDistributedCache DistributedCacheExtensions cacheservice ,
+        //{
+        //    var mgdb = mngclnt.GetDatabase(mndbconn.DB);          
+        //    _clts = mgdb.GetCollection<Student>(mndbconn.collections_name);
+
+        //    _db = db;   
+        //    _dch = distributedCache;
+
+        //    _jwt = jwt;
+        //}
+
+        public StudentsController(DemoDB db, IDistributedCache distributedCache) {
+          
+            _db = db;
             _dch = distributedCache;
-        }
 
+        }
 
         //List<Student> stdnts = new List<Student>();
 
 
-        //[HttpGet]
-        //[EnableCors("ApiCorsPolicy")]
-        //public IActionResult Get()
-        //{
-        //    var num = _db.Students.ToList().Count;
-        //    if (num == 0)
-        //    {
+        [HttpGet]
+        [EnableCors("ApiCorsPolicy")]
+        public IActionResult Get( string id) // [FromBody]
+        {
+            
+            var num = _db.Students.ToList().Count;
+            if (num == 0)
+            {
 
-        //        return StatusCode(404, "No Students Found");
-        //    }
+                return StatusCode(404, "No Students Found");
+            }
 
-        //    return Ok(_db.Students.ToList());
-        //    // return Ok(default);
+           // return Ok(_db.Students.Where(x=> id == null || x.Id.ToString() == id).ToList());
+
+           var res = _db.Students.FromSqlRaw("getStudents @p0", parameters: new[] { id }  );
+           
+           
+            
+            return Ok(res);
+            // return Ok(default);
 
 
-        //}
+        }
 
         //[Route("id")]
         [HttpGet("id")]
@@ -79,8 +105,31 @@ namespace WebApplication2.Controllers
 
 
         }
+
+        //[AllowAnonymous]
+        //[HttpPost("login")]
+        //public IActionResult Authenticate([FromBody] UserCred userCred)
+        //{
+        //    //_db.UserCred.Any(e=> e.Username = )
+
+        //    if (!_db.UserCred.Any(u => u.Username == userCred.Username && u.Password == userCred.Password))
+        //    {
+        //        return null;
+        //    }
+            
+
+        //    var token = _jwt.Authenticate(userCred.Username, userCred.Password);
+
+        //    if (token ==null) {
+
+        //        return Unauthorized(); // StatusCode(404, "No Student Found");
+        //    }
+        //    return Ok(token);
+        //}
+
         //[Route("id")]
-        [HttpGet]// "{key}"
+        //[Authorize(Roles ="Admin")]
+        [HttpGet("{key}")]// "{key}"
         [EnableCors("ApiCorsPolicy")]
         public async Task<IActionResult> GetidAsync([FromQuery(Name = "key")] string key , string age)//, string key)
         {
@@ -91,7 +140,13 @@ namespace WebApplication2.Controllers
                 return StatusCode(404, "No Students Found");
             }
 
-            if(key == null)
+
+           var mndbls=  _clts.Find(st=> true).ToList();
+
+            return Ok(mndbls);
+
+
+            if (key == null)
             {
 
                 return Ok(_db.Students.ToList());
@@ -124,25 +179,25 @@ namespace WebApplication2.Controllers
             //    return StatusCode(404, "No Students Found");
             //}
 
-            //if (age == null)
-            //{
+            if (age < 0 || age >18)
+            {
 
-            //    return Ok(_db.Students.ToList());
-            //}
-
-
-            ////_dch.SetString("key02", "hello");
-            //var res = await _dch.GetRecordAsync<JObject>(age);
-            //if (res != null)
-            //{
-            //    return Ok(res);
-            //}
-
-            //tblStudent row = await _db.Students.FirstOrDefaultAsync(x => x.Id == age);
-            //await _dch.SetRecordAsync<tblStudent>(age, row, TimeSpan.FromSeconds(10));
+                return BadRequest("age cant be small than 0 or great than 18");
+            }
 
 
-            return Ok(default(string));
+            //_dch.SetString("key02", "hello");
+            var res = await _dch.GetRecordAsync<Newtonsoft.Json.Linq.JArray>(age.ToString()+"_age");
+            if (res != null)
+            {
+                return Ok(res);
+            }
+
+            List<Students> results = await _db.Students.Where(x => x.Age.ToString() == age.ToString()).ToListAsync();
+            await _dch.SetRecordAsync<List<Students>>(age.ToString()+"_age", results, TimeSpan.FromSeconds(100000));
+
+
+            return Ok(results);//Ok(default(string));
         }
 
         [HttpGet("GradesAvg")]
@@ -217,21 +272,23 @@ namespace WebApplication2.Controllers
                     return StatusCode(404, "Object is NULL");
                 }
 
+                _clts.InsertOne(student);
+
                 Students studentnew = new Students();
 
                 //studentnew.Id = 0;// student.Id;
-                studentnew.FirstName = student.FirstName;
-                studentnew.LastName = student.LastName;
-                studentnew.Gender = student.Gender;
-                studentnew.Age = student.Age;
-                studentnew.GradesAvg = student.GradesAvg;
-                studentnew.Nation = student.Nation;
-                studentnew.Phone = student.Phone;
-                studentnew.Tel = student.Tel;
-                studentnew.Brithday = student.Brithday;
-                studentnew.DateIncrease = student.DateIncrease;
-                studentnew.Country = student.Country;
-                studentnew.email = student.email;
+                //studentnew.FirstName = student.FirstName;
+                //studentnew.LastName = student.LastName;
+                //studentnew.Gender = student.Gender;
+                //studentnew.Age = student.Age;
+                //studentnew.GradesAvg = student.GradesAvg;
+                //studentnew.Nation = student.Nation;
+                //studentnew.Phone = student.Phone;
+                //studentnew.Tel = student.Tel;
+                //studentnew.Brithday = student.Brithday;
+                //studentnew.DateIncrease = student.DateIncrease;
+                //studentnew.Country = student.Country;
+                //studentnew.email = student.email;
 
                 // _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Tirgul].[dbo].[Students] ON");
 
@@ -262,7 +319,7 @@ namespace WebApplication2.Controllers
             }
             catch (Exception e)
             {
-                return StatusCode(500, e.InnerException.Message);
+                return BadRequest( e.InnerException.Message);
                 //BadRequest(e.InnerException.Message);
 
             }
