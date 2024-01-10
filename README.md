@@ -42,9 +42,3 @@ create table QuestionType (
 )
 
 
-notice when i come to create question or vote , i have strange error that i didnt find the reason it's been created:
-
-"Invalid column name 'QuestionQST_Id'."
-
-
-
