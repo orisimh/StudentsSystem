@@ -15,11 +15,13 @@ namespace WebApplication2.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public int ANS_Id { get; set; }
-        public int ANS_QST_ID { get; set; }
+        // public int ?ANS_QST_ID { get; set; }
         public string ANS_Text { get; set; }
         public int ANS_isCorrectAns { get; set; }
-        public int ANS_Votes { get; set; }
+        public int? ANS_Votes { get; set; }
+        public int? QuestionQST_Id { get; set; }
 
         
+
     }
 }

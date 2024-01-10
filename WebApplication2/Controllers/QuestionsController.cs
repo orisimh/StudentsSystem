@@ -83,7 +83,7 @@ namespace WebApplication2.Controllers
               QST_Type = q.QST_Type.ToString()  ,
 
               Answers = _db.Answer
-                    .Where(a => a.ANS_QST_ID == q.QST_Id)
+                    .Where(a => a.QuestionQST_Id == q.QST_Id)
                     .Select(a => new
                     {
                         AnswerId = a.ANS_Id,
@@ -137,24 +137,24 @@ namespace WebApplication2.Controllers
                 _db.Question.Add(qs);
 
 
-                //  _db.SaveChanges();
+              //  _db.SaveChanges();
 
 
-                questionId = 1;// _db.Question.OrderByDescending(q => q.QST_Id).ToList().First().QST_Id;
+               // questionId =  _db.Question.OrderByDescending(q => q.QST_Id).ToList().First().QST_Id;
 
                 foreach ( Answer ans in qs.Answers)
                 {
-                    ans.ANS_QST_ID = questionId;
+                   // ans.ANS_QST_ID = questionId;
 
                     _db.Answer.Add(ans);
 
                 }
 
-                _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer ON;");
+                //_db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer ON;");
 
                 _db.SaveChanges();
 
-                _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer Off;");
+               //  _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer Off;");
 
                 _db.Database.CommitTransaction();
 
@@ -182,43 +182,44 @@ namespace WebApplication2.Controllers
 
             try
             {
-                if (  id == 0 || questionId == 0 )
-                {
+                var query = _db.Question
+                                .Where(q => q.QST_Id.ToString() == questionId.ToString());
 
-                    return StatusCode(404, "please provide the nember of answer and question");
+
+                if (query.FirstOrDefault() == null)
+                    return NotFound("Question Not Found");
+
+                var isValid = query.Select(q => new
+                {
+                    Answer = _db.Answer
+                          .Where(a => (a.QuestionQST_Id == q.QST_Id) && (a.ANS_Id == id)).FirstOrDefault()
+                }).FirstOrDefault();
+
+
+                if (isValid.Answer == null )
+                {
+                    return StatusCode(404, "please provide valid number of answer and question");
                 }
 
 
 
-                var votes = _db.Answer.Where(ans => ans.ANS_Id == id).FirstOrDefault().ANS_Votes; // .FirstOrDefault().ANS_Votes;
+                var answer = _db.Answer.Where(ans => ans.ANS_Id == id).FirstOrDefault(); // .FirstOrDefault().ANS_Votes;
 
-
-                var ans = new Answer() { ANS_Id = id, ANS_Votes = votes++ };
-                _db.Answer.Add(ans);
+                   
+                answer.ANS_Votes += 1;
+                _db.Answer.Update(answer);
                 _db.SaveChanges();
 
+                var type = query.FirstOrDefault().QST_Type;
 
-
-                var query = _db.Question
-                .Where(q => q.QST_Id.ToString() == questionId.ToString());
-
-
-                if (query == null)
-                    return NotFound("Question Not Found");
-
-                var type = _db.Question
-                .Where(q => q.QST_Id.ToString() == questionId.ToString()).First().QST_Type;
-
-                
-
-                if (type == 2 ) //     Question is type of "Trivia"
+                if (type == 2 ) // Question is type of "Trivia"
                 {
 
                      var result = query
                          .Select(q => new {
 
                              Answers = _db.Answer
-                            .Where(a => a.ANS_QST_ID == q.QST_Id)
+                            .Where(a => a.QuestionQST_Id == q.QST_Id)
                             .Select(a => new
                             {
                                 AnswerId = a.ANS_Id,
@@ -239,7 +240,7 @@ namespace WebApplication2.Controllers
                      .Select(q => new {
 
                      Answers = _db.Answer
-                        .Where(a => a.ANS_QST_ID == q.QST_Id)
+                        .Where(a => a.QuestionQST_Id == q.QST_Id)
                         .Select(a => new
                         {
                             AnswerId = a.ANS_Id,
