@@ -60,7 +60,7 @@ namespace WebApplication2.Controllers
             if (num == 0)
             {
 
-                return StatusCode(404, "No Qiestions Found");
+                return StatusCode(404, "No Questions Found");
             }
 
             var query = _db.Question
