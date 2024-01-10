@@ -29,7 +29,9 @@ namespace WebApplication2.Data
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           
+
+            modelBuilder.Entity<Question>().Property(x => x.QST_Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Answer>().Property(x => x.ANS_Id).ValueGeneratedOnAdd();
 
             base.OnModelCreating(modelBuilder);
 

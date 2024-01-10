@@ -129,17 +129,18 @@ namespace WebApplication2.Controllers
                     return BadRequest("please provide valid Question Type");
                 }
 
-
+                _db.Database.BeginTransaction();
 
                 //var Answers = qs.Answers;
                 //qs.Answers = null;
 
                 _db.Question.Add(qs);
-           
-                
 
 
-                questionId = _db.Question.OrderByDescending(q => q.QST_Id).ToList().First().QST_Id;
+                //  _db.SaveChanges();
+
+
+                questionId = 1;// _db.Question.OrderByDescending(q => q.QST_Id).ToList().First().QST_Id;
 
                 foreach ( Answer ans in qs.Answers)
                 {
@@ -149,7 +150,14 @@ namespace WebApplication2.Controllers
 
                 }
 
+                _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer ON;");
+
                 _db.SaveChanges();
+
+                _db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Answer Off;");
+
+                _db.Database.CommitTransaction();
+
 
             }
             catch (Exception e)
